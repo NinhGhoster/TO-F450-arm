@@ -1,0 +1,63 @@
+#!/bin/bash
+#PBS -P <project-code>
+#PBS -q gpuvolta
+#PBS -l ncpus=12
+#PBS -l ngpus=1
+#PBS -l mem=90GB
+#PBS -l walltime=03:00:00
+#PBS -l storage=scratch/<project-code>
+#PBS -l wd
+#PBS -N qarm_v6
+#PBS -J 0-6
+#PBS -r y
+#PBS -j oe
+#PBS -o $PROJECT_ROOT/results_3d_v6/
+
+# ============================================================
+# gpuvolta variant.  gpuhopper is the fastest card but its queue
+# has been running 190+ jobs deep; gpuvolta clears in minutes and
+# has finished this sweep in about an hour, so it is the one that
+# actually gets results back.  Ratios are per-queue: gpuvolta is
+# 4 V100s on 48 cores, so a single GPU takes ncpus=12.
+#
+# F450 TO with the modal constraint.  Job array — one V_f per GPU.
+# PBS_ARRAY_INDEX (0..6) picks V_f from VOL_FRACS in
+# sims/run_freq_gpu.py: {0.05, 0.065, 0.08, 0.10, 0.20, 0.30, 0.50}
+# at a fixed omega_target of 500 Hz.  The three lowest bracket the
+# OEM arm's own 7.6 % volume fraction, which is what allows an
+# equal-mass comparison rather than only a same-V_f one.
+# Walltime: 3 h per task — modal eigsolve adds ~ 30 % to per-iter cost
+# vs v3, and convergence at ω_target = 1000 Hz can stall near the
+# stiff-constraint boundary.
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+echo "==== PBS Job ${PBS_JOBID} ===="
+echo "Array index : ${PBS_ARRAY_INDEX:-0}"
+echo "Host        : $(hostname)"
+echo "Working dir : $(pwd)"
+echo "Started at  : $(date '+%Y-%m-%d %H:%M:%S')"
+echo "CPUs        : ${PBS_NCPUS}"
+echo "GPUs        : ${PBS_NGPUS:-1}"
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv 2>&1 || true
+echo ""
+
+module load python3/3.12.1
+module load cuda/12.5.1
+
+# Let BLAS use all 12 cores for assembly steps
+unset OMP_NUM_THREADS OPENBLAS_NUM_THREADS MKL_NUM_THREADS NUMEXPR_NUM_THREADS
+
+echo "Python:  $(venv/bin/python --version)"
+venv/bin/python -c "import numpy; print('NumPy', numpy.__version__)"
+venv/bin/python -c "import cupy; print('CuPy', cupy.__version__)" 2>&1 | head -3
+venv/bin/python -c "from src.fem_gpu import gpu_available; print('GPU visible:', gpu_available())"
+
+echo ""
+export QARM_RESULTS_DIR=$PROJECT_ROOT/results_3d_v6
+mkdir -p "$QARM_RESULTS_DIR"
+venv/bin/python -u -m sims.run_freq_gpu
+
+echo ""
+echo "Finished at : $(date '+%Y-%m-%d %H:%M:%S')"

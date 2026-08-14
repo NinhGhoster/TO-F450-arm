@@ -1,0 +1,78 @@
+{
+  "cases": [
+    {
+      "max_vm_MPa": 4.475801895219337,
+      "sf_yield": 8.490098733053468,
+      "max_disp_mm": 4.356964246135795,
+      "peak_node": 4273,
+      "n_nodes": 54288,
+      "tag": "LC1_hover",
+      "label": "Hover",
+      "load": "F_z = 2.94 N"
+    },
+    {
+      "max_vm_MPa": 8.951614090532557,
+      "sf_yield": 4.245044481999031,
+      "max_disp_mm": 8.71392849227159,
+      "peak_node": 4273,
+      "n_nodes": 54288,
+      "tag": "LC2_maneuver",
+      "label": "Maneuver (2 g)",
+      "load": "F_z = 5.88 N"
+    },
+    {
+      "max_vm_MPa": 22.379002809880674,
+      "sf_yield": 1.6980202524136783,
+      "max_disp_mm": 21.784821230678933,
+      "peak_node": 4273,
+      "n_nodes": 54288,
+      "tag": "LC3_landing",
+      "label": "Hard landing",
+      "load": "F_z = -14.7 N"
+    },
+    {
+      "max_vm_MPa": 8.329557473974653,
+      "sf_yield": 4.562067086844575,
+      "max_disp_mm": 7.615639184298058,
+      "peak_node": 4273,
+      "n_nodes": 54288,
+      "tag": "LC4_banked",
+      "label": "Banked turn",
+      "load": "F = (0, 2.94, 5.09) N"
+    },
+    {
+      "max_vm_MPa": 0.3731008697827271,
+      "sf_yield": 101.84913270807719,
+      "max_disp_mm": 0.14287661962306375,
+      "peak_node": 1351,
+      "n_nodes": 54288,
+      "tag": "LC5_proptorque",
+      "label": "Propeller torque",
+      "load": "M_z = 0.10 N.m"
+    }
+  ],
+  "frequencies_Hz": [
+    16.8027,
+    51.18276,
+    109.8606,
+    253.5015,
+    540.8202,
+    627.7706
+  ],
+  "eff_mass_z": [
+    0.7923869243812629,
+    3.652411024574079e-10,
+    3.5561195131503106e-05,
+    0.03798793014680617,
+    5.8936083423682594e-05,
+    0.0005138010506907171
+  ],
+  "first_excitable_Hz": 16.8027,
+  "first_excitable_frac": 0.7923869243812629,
+  "first_excitable_mode": 1,
+  "sf_fatigue": 4.996502800976107,
+  "N_cycles": 1000000000.0,
+  "mass_g": 34.413497367357465,
+  "sigma_y_MPa": 38.0,
+  "sigma_u_MPa": 48.0
+}

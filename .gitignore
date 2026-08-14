@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+results_3d*/
+verification/
+fea_oem/
+*.pkl
+*.frd
+*.dat
+*.frd.gz
+.DS_Store
