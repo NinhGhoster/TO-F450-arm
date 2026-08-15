@@ -1,0 +1,17 @@
+{
+  "_what": "In-house vs CalculiX 2.23 modal cross-check on the SOLID design domain.",
+  "_why": "The manuscript's Sec 2.8 verification claim was inherited from an earlier revision whose design domain was a different size (220x56x44). Re-derived 2026-08-15 on the production 216x42x54 domain so the number in the text is a measurement, not a memory.",
+  "_how": "./venv/bin/python -m sims.export_abaqus_inp --baseline  ->  verification/baseline_solid.inp;  venv-ccx/bin/ccx -i baseline_solid",
+  "domain_mm": [216, 42, 54],
+  "elements": 61142,
+  "nodes": 67124,
+  "fixed_nodes": 1093,
+  "tip_mass_kg": 0.06,
+  "tip_nodes": 120,
+  "material": {"E_Pa": 1.7e9, "nu": 0.39, "rho_kg_m3": 930},
+  "in_house_Hz": [211.769, 247.301, 826.966, 1249.216, 1255.388, 1637.157],
+  "calculix_Hz": [201.435, 244.370, 793.692, 1232.687, 1234.642, 1628.763],
+  "delta_pct": {"w1": 5.13, "w2": 1.20},
+  "note": "In-house is the stiffer of the two. Both are fully-integrated trilinear hexes; the spread bounds the discretisation uncertainty at 2 mm. Scaling the sweep down by 5.1% gives 131-242 Hz, still entirely inside the 83-267 Hz band, so the paper's conclusion is robust and the correction moves designs further inside the band.",
+  "c3d8i_attempt": "Re-running with TYPE=C3D8I segfaults in ccx 2.23 (exit 139) when MASS elements are present; not pursued."
+}

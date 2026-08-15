@@ -22,7 +22,8 @@ import sys
 
 import numpy as np
 
-from sims.consolidate_v6 import SUB_MAX, SUPER_MIN, rows, verdict
+from sims.consolidate_v6 import F_1P, F_BPF, SUB_MAX, SUPER_MIN, rows, verdict
+from sims.modal_participation import EXCITABLE_FRAC
 
 PAPER = "paper_v4_modal.md"
 
@@ -76,10 +77,42 @@ def main():
     checks.append(("OEM arm is sub-critical and clear", "True", oem_clear))
     none_at_target = all(r["w_exc"] < 500 for r in rs.values())
     checks.append(("no design reaches the 500 Hz target", "True", none_at_target))
-    # The two modes the paper says thrust cannot excite.
-    z2, z3 = oem["eff_mass_z"][1], oem["eff_mass_z"][2]
-    checks.append(("OEM in-band modes carry ~0 % effective mass",
-                   f"{z2:.4f}/{z3:.4f}", z2 < 0.005 and z3 < 0.005))
+    # Which OEM modes lie in the band is derived from the band, not asserted.
+    # Hard-coding the indices here once let the manuscript name modes 2 and 3
+    # when the in-band pair is 3 and 4 — the check agreed with the text because
+    # it had been written from the text.
+    band = [(i + 1, f, m) for i, (f, m)
+            in enumerate(zip(oem["frequencies_Hz"], oem["eff_mass_z"]))
+            if F_1P[0] <= f <= F_BPF[1]]
+    idx = "+".join(f"w{i}" for i, _, _ in band)
+    checks.append(("OEM in-band modes are the ones the text names",
+                   idx, idx == "w3+w4"))
+    # They must all sit below the excitability threshold for the paper's claim
+    # to hold; the claim is that none is thrust-excitable, not that none exists.
+    worst = max((m for _, _, m in band), default=0.0)
+    checks.append((f"OEM in-band participation < {EXCITABLE_FRAC:.0%}",
+                   f"{worst:.4f}", worst < EXCITABLE_FRAC))
+    # And the manuscript must quote the real figures, to one decimal in %.
+    checks.append(("OEM in-band participation quoted in text",
+                   f"{worst*100:.1f} %", f"{worst*100:.1f} %" in text))
+
+    # --- solver cross-check (Sec 2.8) --------------------------------------
+    # These were carried over from a revision with a differently-sized design
+    # domain and overstated the agreement as 1.0 %. Checked against the deck
+    # that actually ran, so they cannot drift again.
+    try:
+        cc = json.load(open("notes/solver_crosscheck.json"))
+        d1 = 100 * abs(cc["in_house_Hz"][0] - cc["calculix_Hz"][0]) / cc["calculix_Hz"][0]
+        checks.append(("Sec 2.8 in-house omega_1 quoted",
+                       f"{cc['in_house_Hz'][0]:.1f}",
+                       f"{cc['in_house_Hz'][0]:.1f} Hz" in text))
+        checks.append(("Sec 2.8 CalculiX omega_1 quoted",
+                       f"{cc['calculix_Hz'][0]:.1f}",
+                       f"{cc['calculix_Hz'][0]:.1f} Hz" in text))
+        checks.append(("Sec 2.8 spread quoted", f"{d1:.1f} %",
+                       f"{d1:.1f} %" in text))
+    except FileNotFoundError:
+        checks.append(("solver cross-check recorded", "notes/solver_crosscheck.json", False))
 
     # --- figure captions ---------------------------------------------------
     # Captions carry numbers too, and they are edited by hand more often than
